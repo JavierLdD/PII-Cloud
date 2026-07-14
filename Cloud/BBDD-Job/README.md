@@ -1,0 +1,300 @@
+# Cloud Run Job para PII en BBDD
+
+Boilerplate para desplegar en Cloud Run Jobs el flujo tabular/BBDD basado en
+`Table_Extract`, incluido en la raiz de `PII-Cloud`. El job recibe un
+`ScanRequest`, conecta a una fuente BBDD y ejecuta PII Discovery. Una ejecucion
+exitosa publica primero el artifact
+JSON en Cloud Storage y despues persiste su proyeccion consultable en Cloud SQL,
+en una unica transaccion idempotente.
+
+## Estructura
+
+```text
+Cloud/BBDD-Job/
+  Dockerfile
+  cloudbuild.yaml
+  requirements-cloud.txt
+  config/
+    deploy.env.sample.sh
+    env.sample.yaml
+    job.yaml.template
+  clouddeploy/
+    skaffold.yaml
+  scripts/
+    build.sh
+    cloud_deploy_release.sh
+    deploy_job.sh
+    execute_job.sh
+    run.sh
+  src/cloud_bbdd_job/
+    main.py
+    results_repository.py
+    scan_request.py
+```
+
+## Entrada principal: ScanRequest
+
+La entrada preferida es `SCAN_REQUEST_JSON`. El Visor envia solo identidad de la
+run, motor, credencial de la fuente y un alcance explícito por schemas/tablas o
+la confirmacion del full scan. Proyecto, region, job, bucket, modelo, device y
+otras opciones operativas pertenecen al despliegue, no al usuario.
+
+```json
+{
+  "run_id": "86ca6e73-ea37-4c1f-812d-7b71dcb771bb",
+  "user_id": "ana",
+  "run_name": "Clientes produccion Q3",
+  "database_type": "postgresql",
+  "connection_uri": "postgresql+psycopg://usuario:password@db.example.com:5432/db",
+  "include_schemas": ["public", "audit"],
+  "include_tables": ["customers", "invoices"],
+  "confirm_full_scan": false,
+  "allow_full_database_scan": false
+}
+```
+
+`database_type` acepta `postgresql` y `oracle`; el esquema del connection string
+debe coincidir. Debe existir al menos un filtro de schema o tabla cuando
+`confirm_full_scan=false`; si se envían ambos se aplican conjuntamente. Para un
+full scan explícito, ambas listas deben viajar vacías y
+`confirm_full_scan=true` se conserva como scope efectivo. `profile_only` debe
+permanecer en `false` para producir resultados consultables. Los `BBDD_*` legacy
+quedan solo como fallback de compatibilidad.
+
+## Cloud SQL de resultados
+
+Antes de desplegar, aplicar el schema central cloud:
+
+```bash
+psql "$DATABASE_URL" -f Cloud/Database/schema.sql
+```
+
+Ese archivo crea de forma aditiva `database_discovery_runs`,
+`database_discovery_tables` y `database_discovery_findings`. El repositorio solo
+persiste una lista blanca de metadata: nunca guarda `connection_uri`,
+`profile.source_uri`, `evidence_summary` ni valores muestreados.
+
+`BBDD_RESULTS_DATABASE_URL` es obligatorio y apunta a esta Cloud SQL. Es un
+secreto distinto de la credencial de la BBDD objetivo. `GCS_OUTPUT_URI` tambien
+es obligatorio: si falla GCS o Cloud SQL, el Job termina con error; la fila
+`completed` solo existe despues de ambas escrituras.
+
+## Prueba local sin Docker
+
+Una ejecucion completa local tambien debe tener destinos reales de prueba para
+GCS y PostgreSQL. Desde la raiz de `PII-Cloud`:
+
+```bash
+export SCAN_REQUEST_JSON='{"run_id":"86ca6e73-ea37-4c1f-812d-7b71dcb771bb","user_id":"ana","run_name":"Clientes local","database_type":"postgresql","connection_uri":"postgresql+psycopg://usuario:password@localhost:5432/db","confirm_full_scan":true}'
+export GCS_OUTPUT_URI="gs://bucket-pruebas/database-discovery/"
+export BBDD_RESULTS_DATABASE_URL="postgresql://results_user:password@localhost:5432/pii_results"
+export BBDD_DISABLE_ZERO_SHOT="true"
+
+PYTHONPATH="$PWD/Table_Extract:$PWD/Cloud/BBDD-Job/src" \
+  conda run -n PII_bbdds python -m cloud_bbdd_job.main
+```
+
+## Prueba local con Docker
+
+```bash
+docker build \
+  -f Cloud/BBDD-Job/Dockerfile \
+  -t bbdd-pii-job:local \
+  .
+
+docker run --rm \
+  -e SCAN_REQUEST_JSON='{"run_id":"86ca6e73-ea37-4c1f-812d-7b71dcb771bb","user_id":"ana","run_name":"Clientes Docker","database_type":"postgresql","connection_uri":"postgresql+psycopg://usuario:password@host.docker.internal:5432/db","confirm_full_scan":true}' \
+  -e GCS_OUTPUT_URI="gs://bucket-pruebas/database-discovery/" \
+  -e BBDD_RESULTS_DATABASE_URL="postgresql://results_user:password@host.docker.internal:5432/pii_results" \
+  -e BBDD_DISABLE_ZERO_SHOT="true" \
+  -v /private/tmp:/tmp \
+  bbdd-pii-job:local
+```
+
+## Build
+
+Desde la raiz de `PII-Cloud`:
+
+```bash
+source Cloud/BBDD-Job/config/deploy.env.sample.sh
+
+# Solo si el repositorio aun no existe.
+gcloud artifacts repositories create "${AR_REPOSITORY}" \
+  --project "${PROJECT_ID}" \
+  --repository-format docker \
+  --location "${REGION}" \
+  --description "Imagenes PII"
+
+Cloud/BBDD-Job/scripts/build.sh
+```
+
+El script imprime `IMAGE_URI`; usalo en el despliegue.
+
+Para probar PII Discovery con zero-shot en Cloud Run, la imagen debe traer el
+modelo cacheado. El runtime carga el modelo con `local_files_only=True`, por lo
+que no basta con poner `disable_zero_shot=false` si el modelo no fue incluido al
+construir la imagen.
+
+Build local con modelo zero-shot incluido:
+
+```bash
+export IMAGE_TAG="amd64-zero-shot-$(date +%Y%m%d-%H%M%S)"
+export IMAGE_URI="us-central1-docker.pkg.dev/ldd-dev/pii/bbdd-pii-job:${IMAGE_TAG}"
+
+docker buildx build \
+  --platform linux/amd64 \
+  -f Cloud/BBDD-Job/Dockerfile \
+  --build-arg PRELOAD_ZERO_SHOT_MODEL=true \
+  --build-arg ZERO_SHOT_MODEL_NAME="MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7" \
+  -t "${IMAGE_URI}" \
+  --push \
+  --progress=plain \
+  .
+```
+
+Luego actualiza el Job para usar esa imagen:
+
+```bash
+gcloud run jobs update "${JOB_NAME}" \
+  --project "${PROJECT_ID}" \
+  --region "${REGION}" \
+  --image "${IMAGE_URI}"
+```
+
+En el `SCAN_REQUEST_JSON`, deja:
+
+```json
+"profile_only": false,
+"disable_zero_shot": false
+```
+
+## Deploy
+
+El despliegue no contiene `SCAN_REQUEST_JSON` ni una BBDD objetivo fija. Si los
+resultados usan socket Cloud SQL, el Job se asocia solo a esa instancia mediante
+`ATTACH_CLOUD_SQL=true`.
+
+```bash
+source Cloud/BBDD-Job/config/deploy.env.sample.sh
+export PROJECT_ID="tu-proyecto-gcp"
+export REGION="us-central1"
+export IMAGE_URI="us-central1-docker.pkg.dev/tu-proyecto-gcp/pii/bbdd-pii-job:TAG"
+export BBDD_RESULTS_DATABASE_URL_SECRET="bbdd-results-database-url"
+export ATTACH_CLOUD_SQL="true"
+export CLOUD_SQL_INSTANCE="tu-proyecto-gcp:us-central1:pii-results"
+
+Cloud/BBDD-Job/scripts/deploy_job.sh
+```
+
+## Deploy con Cloud Deploy
+
+Cloud Deploy sirve para versionar el despliegue del Job como un release. No
+ejecuta el Job automaticamente; despues del release se invoca con
+`gcloud run jobs execute`.
+
+Desde la raiz de `PII-Cloud`:
+
+```bash
+source Cloud/BBDD-Job/config/deploy.env.sample.sh
+
+# Si ya tienes una imagen construida, definela aqui.
+export IMAGE_URI="us-central1-docker.pkg.dev/ldd-dev/pii/bbdd-pii-job:TAG"
+
+Cloud/BBDD-Job/scripts/cloud_deploy_release.sh
+```
+
+Si `IMAGE_URI` no esta definido, el script llama a `scripts/build.sh` antes de
+crear el release. Para validar solo los manifests generados, sin tocar GCP:
+
+```bash
+CLOUD_DEPLOY_DRY_RUN=1 Cloud/BBDD-Job/scripts/cloud_deploy_release.sh
+```
+
+El script genera:
+
+- un `DeliveryPipeline` de Cloud Deploy;
+- un `Target` Cloud Run para `PROJECT_ID`/`REGION`;
+- un `job.yaml` de Cloud Run Jobs sin `SCAN_REQUEST_JSON`, para no persistir
+  credenciales en el despliegue;
+- un release Cloud Deploy que reemplaza `bbdd-pii-job-image` por `IMAGE_URI`.
+
+## Ejecutar contra una BBDD
+
+Antes de ejecutar, arma un `SCAN_REQUEST_JSON` con el endpoint de la BBDD de esa
+corrida. Para evitar problemas de quoting con `gcloud`, usa la version compacta.
+
+```bash
+export SCAN_REQUEST_JSON='{
+  "run_id": "86ca6e73-ea37-4c1f-812d-7b71dcb771bb",
+  "user_id": "ana",
+  "run_name": "Cliente A produccion",
+  "database_type": "postgresql",
+  "connection_uri": "postgresql+psycopg://usuario:password@db.example.com:5432/db",
+  "confirm_full_scan": true,
+  "allow_full_database_scan": true
+}'
+
+export SCAN_REQUEST_JSON_COMPACT="$(printf '%s' "${SCAN_REQUEST_JSON}" | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin), separators=(",",":")))' )"
+
+Cloud/BBDD-Job/scripts/execute_job.sh
+```
+
+El secreto de resultados es obligatorio en el deploy. La credencial objetivo se
+mantiene por ejecucion y no se instala como secreto fijo del Job:
+
+```bash
+export BBDD_RESULTS_DATABASE_URL_SECRET="bbdd-results-database-url"
+Cloud/BBDD-Job/scripts/deploy_job.sh
+```
+
+## Conectividad de BBDD
+
+El `connection_uri` elige la BBDD en runtime, pero Cloud Run igualmente debe
+tener red para llegar a ese host.
+
+Para una BBDD externa por TCP:
+
+- usa un host/IP alcanzable desde Cloud Run;
+- configura allowlist/firewall/TLS en el lado del cliente;
+- si necesitas IP fija de salida, usa VPC egress/NAT;
+- si la BBDD esta en red privada, configura VPC.
+
+Si la BBDD esta en una red privada accesible por VPC:
+
+```bash
+export VPC_CONNECTOR="projects/tu-proyecto-gcp/locations/us-central1/connectors/pii-connector"
+export VPC_EGRESS="private-ranges-only"
+Cloud/BBDD-Job/scripts/deploy_job.sh
+```
+
+Cloud SQL con socket `/cloudsql/...` se usa para la BBDD de resultados, sin
+cambiar la conectividad de la fuente objetivo:
+
+```bash
+export ATTACH_CLOUD_SQL="true"
+export CLOUD_SQL_INSTANCE="tu-proyecto-gcp:us-central1:tu-instancia"
+Cloud/BBDD-Job/scripts/deploy_job.sh
+```
+
+Si `CLOUD_SQL_INSTANCE` esta exportado pero `ATTACH_CLOUD_SQL` no es `true`, los
+scripts lo ignoran.
+
+
+## IAM minimo
+
+La service account del job necesita:
+
+- `roles/storage.objectCreator` sobre el bucket de `GCS_OUTPUT_URI`.
+- Permisos de red/firewall/allowlist para llegar a la BBDD externa.
+- `roles/cloudsql.client` para la Cloud SQL de resultados cuando se usa socket.
+- Permisos de Artifact Registry para leer la imagen al ejecutar el job.
+- `roles/secretmanager.secretAccessor` sobre `BBDD_RESULTS_DATABASE_URL_SECRET`.
+
+## Notas operativas
+
+- Mantener `TASKS=1` por defecto. Sin sharding, mas tasks repetirian el mismo scan.
+- `profile_only` debe ser `false`; para pruebas baratas, usar
+  `BBDD_DISABLE_ZERO_SHOT=true`.
+- Para usar zero-shot en Cloud Run, construir una imagen con
+  `PRELOAD_ZERO_SHOT_MODEL=true`; la imagen base liviana no trae el modelo.
+- El artifact y Cloud SQL no persisten valores crudos de columnas.

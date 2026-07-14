@@ -1,0 +1,17 @@
+# Example values only. Keep real database credentials in an ignored local file
+# or inject them through Secret Manager at deployment time.
+DISCOVERY_ROUTER_REQUEST_JSON: ""
+
+TOPIC_PDF: ""
+TOPIC_OCR: ""
+TOPIC_DOC: ""
+TOPIC_TABLES: ""
+TOPIC_UNSUPPORTED: ""
+
+DATABASE_URL: ""
+
+LOG_LEVEL: "INFO"
+PUBSUB_PUBLISH_TIMEOUT_SECONDS: "30"
+
+GOOGLE_CLIENT_SECRETS_FILE: ""
+GOOGLE_TOKEN_FILE: ""

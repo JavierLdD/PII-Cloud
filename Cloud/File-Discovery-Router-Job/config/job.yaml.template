@@ -1,0 +1,38 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: file-discovery-router-job
+  labels:
+    app: pii
+    component: file-discovery-router
+spec:
+  template:
+    spec:
+      taskCount: 1
+      parallelism: 1
+      template:
+        spec:
+          serviceAccountName: "file-discovery-router-job@PROJECT_ID.iam.gserviceaccount.com"
+          maxRetries: 0
+          timeoutSeconds: 3600
+          containers:
+            - image: "REGION-docker.pkg.dev/PROJECT_ID/pii/file-discovery-router-job:TAG"
+              resources:
+                limits:
+                  cpu: "1"
+                  memory: "1Gi"
+              env:
+                - name: TOPIC_PDF
+                  value: "projects/PROJECT_ID/topics/pii-route-pdf"
+                - name: TOPIC_OCR
+                  value: "projects/PROJECT_ID/topics/pii-route-ocr"
+                - name: TOPIC_DOC
+                  value: "projects/PROJECT_ID/topics/pii-route-doc"
+                - name: TOPIC_TABLES
+                  value: "projects/PROJECT_ID/topics/pii-route-tables"
+                - name: TOPIC_UNSUPPORTED
+                  value: "projects/PROJECT_ID/topics/pii-route-unsupported"
+                - name: LOG_LEVEL
+                  value: "INFO"
+                - name: VISOR_PIPELINE_REVISION
+                  value: "pii-pipeline-v1"

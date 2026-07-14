@@ -1,0 +1,5 @@
+Resultados-Filtrados-Test/
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store

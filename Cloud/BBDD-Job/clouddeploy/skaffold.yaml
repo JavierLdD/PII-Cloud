@@ -1,0 +1,9 @@
+apiVersion: skaffold/v4beta7
+kind: Config
+metadata:
+  name: bbdd-pii-job
+manifests:
+  rawYaml:
+    - job.yaml
+deploy:
+  cloudrun: {}

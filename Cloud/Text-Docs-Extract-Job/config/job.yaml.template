@@ -1,0 +1,44 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: text-docs-extract-job
+  labels:
+    app: pii
+    component: text-docs-extract
+spec:
+  template:
+    spec:
+      taskCount: 1
+      parallelism: 1
+      template:
+        spec:
+          serviceAccountName: "text-docs-extract-job@PROJECT_ID.iam.gserviceaccount.com"
+          maxRetries: 0
+          timeoutSeconds: 600
+          containers:
+            - image: "REGION-docker.pkg.dev/PROJECT_ID/pii/text-docs-extract-job:TAG"
+              resources:
+                limits:
+                  cpu: "1"
+                  memory: "1Gi"
+              env:
+                - name: SUBSCRIPTION_ID
+                  value: "projects/PROJECT_ID/subscriptions/pii-route-doc-USER_ID-RUN_ID"
+                - name: TOPIC_PII_ENTITIES
+                  value: "projects/PROJECT_ID/topics/pii-entities"
+                - name: TOPIC_TEXT_POISON
+                  value: "projects/PROJECT_ID/topics/pii-text-poison"
+                - name: EXPECTED_USER_ID
+                  value: "user-001"
+                - name: EXPECTED_RUN_ID
+                  value: "RUN_ID"
+                - name: TEXT_MATERIALIZE_SCRATCH_DIR
+                  value: "/tmp/pii-text"
+                - name: TEXT_EXTRACT_MAX_FILE_BYTES
+                  value: "104857600"
+                - name: PER_FILE_TIMEOUT_SECONDS
+                  value: "540"
+                - name: PUBSUB_IDLE_TIMEOUT_SECONDS
+                  value: "60"
+                - name: LOG_LEVEL
+                  value: "INFO"

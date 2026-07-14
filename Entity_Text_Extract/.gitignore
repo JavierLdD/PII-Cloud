@@ -1,0 +1,6 @@
+.env
+.DS_Store
+Resultados-Test/
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/

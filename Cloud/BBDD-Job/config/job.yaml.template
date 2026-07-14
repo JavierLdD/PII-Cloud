@@ -1,0 +1,35 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: bbdd-pii-job
+  labels:
+    app: pii
+    component: bbdd
+spec:
+  template:
+    spec:
+      taskCount: 1
+      parallelism: 1
+      template:
+        spec:
+          serviceAccountName: "bbdd-pii-job@PROJECT_ID.iam.gserviceaccount.com"
+          maxRetries: 0
+          timeoutSeconds: 3600
+          containers:
+            - image: "REGION-docker.pkg.dev/PROJECT_ID/pii/bbdd-pii-job:TAG"
+              resources:
+                limits:
+                  cpu: "2"
+                  memory: "4Gi"
+              env:
+                - name: TABLE_EXTRACT_ZERO_SHOT_DEVICE
+                  value: "cpu"
+                - name: BBDD_DISABLE_ZERO_SHOT
+                  value: "true"
+                - name: GCS_OUTPUT_URI
+                  value: "gs://BBDD_RESULTS_BUCKET/database-discovery/"
+                - name: BBDD_RESULTS_DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: bbdd-results-database-url
+                      key: latest

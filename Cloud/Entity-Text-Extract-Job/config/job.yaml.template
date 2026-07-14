@@ -1,0 +1,50 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: entity-text-extract-job
+  labels:
+    app: pii
+    component: entity-text-extract
+spec:
+  template:
+    spec:
+      taskCount: 1
+      parallelism: 1
+      template:
+        spec:
+          serviceAccountName: "entity-text-extract-job@PROJECT_ID.iam.gserviceaccount.com"
+          maxRetries: 0
+          timeoutSeconds: 900
+          containers:
+            - image: "REGION-docker.pkg.dev/PROJECT_ID/pii/entity-text-extract-job:TAG"
+              resources:
+                limits:
+                  cpu: "2"
+                  memory: "8Gi"
+              env:
+                - name: SUBSCRIPTION_ID
+                  value: "projects/PROJECT_ID/subscriptions/pii-entity-USER_ID-RUN_ID"
+                - name: EXPECTED_USER_ID
+                  value: "user-001"
+                - name: EXPECTED_RUN_ID
+                  value: "RUN_ID"
+                - name: PII_ENTITY_GCS_OUTPUT_URI
+                  value: "gs://BUCKET/RutaGCP"
+                - name: PII_ENTITY_SAVE_RAW_RESULTS
+                  value: "false"
+                - name: PII_ENTITY_ZERO_SHOT_MODEL_URI
+                  value: "gs://BUCKET/models/zero-shot"
+                - name: PII_ENTITY_ZERO_SHOT_LOCAL_DIR
+                  value: "/tmp/pii-models/zero-shot"
+                - name: PII_ENTITY_MODEL_BATCH_SIZE
+                  value: "8"
+                - name: PII_ENTITY_ZERO_SHOT_BATCH_SIZE
+                  value: "8"
+                - name: PII_ENTITY_MODEL_DEVICE
+                  value: "auto"
+                - name: PER_FILE_TIMEOUT_SECONDS
+                  value: "540"
+                - name: PUBSUB_IDLE_TIMEOUT_SECONDS
+                  value: "60"
+                - name: LOG_LEVEL
+                  value: "INFO"

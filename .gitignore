@@ -1,0 +1,78 @@
+# Build de documentacion
+/site/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Entornos y secretos locales
+.env
+.env.*
+!.env.example
+Cloud/BBDD/config/env.local.yaml
+Cloud/BBDD/config/*.local.yaml
+Cloud/BBDD-Job/config/*.local.sh
+Cloud/BBDD-Job/config/*.local.yaml
+Cloud/**/config/*.local.sh
+Cloud/**/config/*.local.yaml
+Cloud/**/scripts/*.local.sh
+Cloud/Database/*.local.yaml
+Cloud/Pruebas/*.local.txt
+Cloud/Pruebas/links.txt
+Cloud/Database/vars.yamnl
+*.pem
+*.key
+*.crt
+*.p12
+*.token
+*token*.json
+*secret*.json
+google_client_secret*.json
+google_drive_token*.json
+
+# Jupyter / notebooks de exploracion
+Experimentos/
+*.ipynb
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# Resultados y artefactos de desarrollo
+**/Resultados*/
+**/Resultados-*/
+**/resultados*/
+**/results/
+**/*_results/
+**/*-results/
+**/*artifacts*/
+**/mineru_artifacts/
+**/tmp/
+**/temp/
+
+# Logs y archivos temporales
+*.log
+logs/
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# Bases de datos locales
+*.sqlite
+*.sqlite3
+*.db
+
+# Sistema/editor
+.DS_Store
+Thumbs.db
+.vscode/
+Test_Data/synthetic_postgres_pii/generate_synthetic_pii_postgres.py
+Test_Data/synthetic_postgres_pii/synthetic_pii_seed.sql
+Test_Data/synthetic_postgres_pii/README.md
