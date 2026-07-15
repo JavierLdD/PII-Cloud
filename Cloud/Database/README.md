@@ -89,7 +89,7 @@ La migracion aditiva crea:
 
 Estas tablas no contienen el connection string objetivo, `source_uri`, evidencia
 textual ni valores muestreados. `bbdd-pii-job` usa
-`BBDD_RESULTS_DATABASE_URL` como secreto separado, sube primero el artifact GCS
+`BBDD_RESULTS_DATABASE_URL` como variable plana en un YAML local ignorado, sube primero el artifact GCS
 y despues reemplaza idempotentemente las filas de la run en una sola transaccion.
 Un fallo en cualquiera de las dos escrituras hace fallar el Job.
 
@@ -97,7 +97,7 @@ Para activar BBDD Discovery:
 
 1. Respaldar Cloud SQL y aplicar `Cloud/Database/schema.sql`.
 2. Desplegar la imagen actualizada de `Cloud/BBDD-Job`.
-3. Montar el secreto `BBDD_RESULTS_DATABASE_URL` y configurar
-   `GCS_OUTPUT_URI` mediante variables internas del Job.
+3. Configurar `BBDD_RESULTS_DATABASE_URL` y `GCS_OUTPUT_URI` en el YAML local
+   de variables internas del Job.
 4. Validar una run PostgreSQL y confirmar que el artifact y las tres tablas
    tienen el mismo `run_id` antes de habilitarla desde el Visor.

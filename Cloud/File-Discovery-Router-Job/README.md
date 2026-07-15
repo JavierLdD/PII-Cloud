@@ -53,9 +53,8 @@ archivos aunque su contenido no haya cambiado.
 Por compatibilidad, el job tambien acepta `PIPELINE_REVISION` cuando la variable
 con prefijo `VISOR_` no esta definida.
 
-`DATABASE_URL` debe configurarse con Secret Manager en despliegues reales.
-Para pruebas rapidas, el script tambien acepta `DATABASE_URL` como variable de
-entorno plana si `DATABASE_URL_SECRET` no esta configurada.
+`DATABASE_URL` se configura como variable plana dentro de un YAML local
+ignorado. No se usa Secret Manager en este pipeline.
 
 ## Build
 
@@ -81,15 +80,7 @@ export IMAGE_URI="REGION-docker.pkg.dev/PROJECT_ID/pii/file-discovery-router-job
 export PROJECT_ID="PROJECT_ID"
 export REGION="us-central1"
 export SERVICE_ACCOUNT="file-discovery-router-job@PROJECT_ID.iam.gserviceaccount.com"
-export DATABASE_URL_SECRET="pii-database-url"
-Cloud/File-Discovery-Router-Job/scripts/deploy_job.sh
-```
-
-Para una prueba sin Secret Manager:
-
-```bash
-unset DATABASE_URL_SECRET
-export DATABASE_URL="postgresql://pii_app:PASSWORD@/PII_DB?host=/cloudsql/PROJECT_ID:REGION:INSTANCE_NAME"
+export ENV_VARS_FILE="Cloud/File-Discovery-Router-Job/config/env.deploy.local.yaml"
 Cloud/File-Discovery-Router-Job/scripts/deploy_job.sh
 ```
 

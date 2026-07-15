@@ -4,7 +4,7 @@ Nombre por defecto: `text-pdf-extract-job`.
 
 ## Objetivo
 
-Consumir PDFs enrutados, materializarlos desde Drive, extraer el texto embebido
+Consumir PDFs enrutados, materializarlos desde fuentes externas, extraer el texto embebido
 y dejar páginas y chunks listos en Cloud SQL. La versión cloud actual no ejecuta
 OCR.
 
@@ -46,8 +46,8 @@ transporta referencias y metadata; Entity lee el texto desde PostgreSQL.
 
 ## PDFs que requieren OCR
 
-!!! danger "Política actual: poison del archivo completo"
-    Si una página requiere OCR, el PDF completo queda fallido. El job elimina
+
+Si una página requiere OCR, el PDF completo queda fallido. El job elimina
     sus chunks y publica `file.text_extract_poisoned` con
     `reason=ocr_required` en `pii-text-poison`.
 

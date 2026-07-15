@@ -78,7 +78,6 @@ Para Cloud SQL nativo:
 export ATTACH_CLOUD_SQL=true
 export CLOUD_SQL_INSTANCE="PROJECT_ID:REGION:INSTANCE_NAME"
 export ENV_VARS_FILE="Cloud/Text-Docs-Extract-Job/config/env.deploy.yaml"
-unset DATABASE_URL_SECRET
 unset DATABASE_URL
 Cloud/Text-Docs-Extract-Job/scripts/deploy_job.sh
 ```

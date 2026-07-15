@@ -8,11 +8,11 @@
 - topics y suscripciones Pub/Sub;
 - acceso de lectura a Google Drive;
 - buckets GCS y permisos de lectura/escritura;
-- secretos para las URLs de base de datos;
+- archivos YAML locales ignorados para las URLs de base de datos;
 - conectividad de red para Cloud SQL y las fuentes BBDD.
 
-Las credenciales reales deben vivir en Secret Manager o archivos
-`*.local.*` ignorados; no en los YAML versionados.
+Las credenciales reales viven únicamente en archivos `*.local.*` ignorados;
+este pipeline no usa Secret Manager y no guarda credenciales en YAML versionados.
 
 ## Construcción
 
@@ -29,8 +29,9 @@ Cloud/BBDD-Job/scripts/build.sh
 
 Router, PDF, Docs y Entity requieren `IMAGE_URI`; esa URI ya codifica proyecto,
 región, repositorio y tag. El build de BBDD requiere `PROJECT_ID` y puede derivar
-`REGION`/`IMAGE_URI` desde sus defaults. BBDD necesita un build especial con
-`PRELOAD_ZERO_SHOT_MODEL=true` si se desea usar Zero-Shot.
+`REGION`/`IMAGE_URI` desde sus defaults. BBDD descarga el snapshot Zero-Shot
+desde `TABLE_EXTRACT_ZERO_SHOT_MODEL_URI` al iniciar; no necesita un build
+especial con el modelo incrustado.
 
 ## Despliegue
 
@@ -62,7 +63,7 @@ ejecución, no deben quedar fijados globalmente en el job.
 4. Ejecutar Text Docs Extract para drenar documentos.
 5. Inspeccionar `pii-text-poison` y reconocer que `pii-ocr` y `pii-tables` no
    tienen consumidor cloud.
-6. Ejecutar Entity Text Extract después de que PDF y Docs hayan publicado sus
+6. Ejecutar Entity Text Extract después de que PDF y Docs hayan publicado
    `file.chunks_ready`.
 7. Verificar estados y conteos en Cloud SQL, objetos JSON en GCS y logs de cada
    ejecución.
@@ -102,13 +103,3 @@ Para cada job, comprobar:
 4. filas esperadas y estados en Cloud SQL;
 5. objetos esperados en GCS;
 6. ausencia de rutas temporales o outbox pendiente después del éxito.
-
-!!! warning "Sin reintentos administrados"
-    Las plantillas actuales fijan `maxRetries: 0`. Un error exige decidir si es
-    seguro corregir y volver a ejecutar; no asuma que Cloud Run lo hará solo.
-
-## Cambios de pipeline
-
-Si una modificación invalida resultados previos, cambie
-`VISOR_PIPELINE_REVISION`. Si cambia contratos, persistencia o modelos,
-actualice la documentación correspondiente en el mismo commit.

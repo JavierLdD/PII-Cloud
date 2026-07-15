@@ -20,16 +20,17 @@ spec:
               resources:
                 limits:
                   cpu: "2"
-                  memory: "4Gi"
+                  memory: "8Gi"
               env:
                 - name: TABLE_EXTRACT_ZERO_SHOT_DEVICE
                   value: "cpu"
                 - name: BBDD_DISABLE_ZERO_SHOT
-                  value: "true"
+                  value: "false"
+                - name: TABLE_EXTRACT_ZERO_SHOT_MODEL_URI
+                  value: "gs://BBDD_MODELS_BUCKET/Models/zero-shot/mdeberta-xnli/v1"
+                - name: TABLE_EXTRACT_ZERO_SHOT_LOCAL_DIR
+                  value: "/tmp/pii-models/zero-shot"
                 - name: GCS_OUTPUT_URI
                   value: "gs://BBDD_RESULTS_BUCKET/database-discovery/"
                 - name: BBDD_RESULTS_DATABASE_URL
-                  valueFrom:
-                    secretKeyRef:
-                      name: bbdd-results-database-url
-                      key: latest
+                  value: "postgresql://RESULTS_USER:RESULTS_PASSWORD@/RESULTS_DB?host=/cloudsql/PROJECT_ID:REGION:INSTANCE"

@@ -17,14 +17,19 @@ MAX_RETRIES="${MAX_RETRIES:-0}"
 TASK_TIMEOUT="${TASK_TIMEOUT:-3600s}"
 TASK_TIMEOUT_SECONDS="${TASK_TIMEOUT_SECONDS:-${TASK_TIMEOUT%s}}"
 CPU="${CPU:-2}"
-MEMORY="${MEMORY:-4Gi}"
+MEMORY="${MEMORY:-8Gi}"
 RELEASE_NAME="${RELEASE_NAME:-bbdd-pii-job-$(date +%Y%m%d%H%M%S)}"
 CLOUD_DEPLOY_DRY_RUN="${CLOUD_DEPLOY_DRY_RUN:-0}"
 ATTACH_CLOUD_SQL="${ATTACH_CLOUD_SQL:-false}"
-BBDD_RESULTS_DATABASE_URL_SECRET_VERSION="${BBDD_RESULTS_DATABASE_URL_SECRET_VERSION:-latest}"
+BBDD_DISABLE_ZERO_SHOT="${BBDD_DISABLE_ZERO_SHOT:-false}"
+TABLE_EXTRACT_ZERO_SHOT_MODEL_URI="${TABLE_EXTRACT_ZERO_SHOT_MODEL_URI:-}"
+TABLE_EXTRACT_ZERO_SHOT_LOCAL_DIR="${TABLE_EXTRACT_ZERO_SHOT_LOCAL_DIR:-/tmp/pii-models/zero-shot}"
 
-: "${BBDD_RESULTS_DATABASE_URL_SECRET:?Set the results Cloud SQL Secret Manager name.}"
+: "${BBDD_RESULTS_DATABASE_URL:?Set the plain results Cloud SQL URL.}"
 : "${GCS_OUTPUT_URI:?Set the internal gs:// artifact destination.}"
+if ! [[ "${BBDD_DISABLE_ZERO_SHOT}" =~ ^(1|true|TRUE|yes|YES|on|ON)$ ]]; then
+  : "${TABLE_EXTRACT_ZERO_SHOT_MODEL_URI:?Set the gs:// Zero-Shot snapshot URI.}"
+fi
 
 if ! [[ "${TASK_TIMEOUT_SECONDS}" =~ ^[0-9]+$ ]]; then
   echo "TASK_TIMEOUT_SECONDS must be a plain integer. Current value: ${TASK_TIMEOUT_SECONDS}" >&2
@@ -120,14 +125,15 @@ cat >> "${WORK_DIR}/job.yaml" <<YAML
                 - name: TABLE_EXTRACT_ZERO_SHOT_DEVICE
                   value: "cpu"
                 - name: BBDD_DISABLE_ZERO_SHOT
-                  value: "true"
+                  value: "${BBDD_DISABLE_ZERO_SHOT}"
+                - name: TABLE_EXTRACT_ZERO_SHOT_MODEL_URI
+                  value: "${TABLE_EXTRACT_ZERO_SHOT_MODEL_URI}"
+                - name: TABLE_EXTRACT_ZERO_SHOT_LOCAL_DIR
+                  value: "${TABLE_EXTRACT_ZERO_SHOT_LOCAL_DIR}"
                 - name: GCS_OUTPUT_URI
                   value: "${GCS_OUTPUT_URI}"
                 - name: BBDD_RESULTS_DATABASE_URL
-                  valueFrom:
-                    secretKeyRef:
-                      name: "${BBDD_RESULTS_DATABASE_URL_SECRET}"
-                      key: "${BBDD_RESULTS_DATABASE_URL_SECRET_VERSION}"
+                  value: "${BBDD_RESULTS_DATABASE_URL}"
 YAML
 
 echo "Cloud Deploy source rendered at: ${WORK_DIR}"

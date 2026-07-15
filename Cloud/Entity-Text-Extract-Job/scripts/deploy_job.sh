@@ -13,11 +13,24 @@ TASK_TIMEOUT="${TASK_TIMEOUT:-900s}"
 CPU="${CPU:-2}"
 MEMORY="${MEMORY:-8Gi}"
 ENV_VARS_FILE="${ENV_VARS_FILE:-${PROJECT_ROOT}/Cloud/Entity-Text-Extract-Job/config/env.sample.yaml}"
-DATABASE_URL_SECRET_VERSION="${DATABASE_URL_SECRET_VERSION:-latest}"
 ATTACH_CLOUD_SQL="${ATTACH_CLOUD_SQL:-false}"
 CLEAR_CLOUD_SQL_INSTANCES="${CLEAR_CLOUD_SQL_INSTANCES:-true}"
 
 : "${IMAGE_URI:?Set IMAGE_URI with the Artifact Registry image to deploy.}"
+: "${ENV_VARS_FILE:?Set ENV_VARS_FILE with the plain runtime variables YAML.}"
+
+if [[ ! -f "${ENV_VARS_FILE}" ]]; then
+  echo "ENV_VARS_FILE does not exist: ${ENV_VARS_FILE}" >&2
+  exit 2
+fi
+
+if [[ -n "${DATABASE_URL:-}" && -f "${ENV_VARS_FILE}" ]]; then
+  cat >&2 <<EOF
+DATABASE_URL must be configured inside ENV_VARS_FILE, not passed separately.
+Current file: ${ENV_VARS_FILE}
+EOF
+  exit 2
+fi
 
 cmd=(
   gcloud run jobs deploy "${JOB_NAME}"
@@ -40,17 +53,7 @@ if [[ -n "${SERVICE_ACCOUNT:-}" ]]; then
   cmd+=(--service-account "${SERVICE_ACCOUNT}")
 fi
 
-if [[ -f "${ENV_VARS_FILE}" ]]; then
-  cmd+=(--env-vars-file "${ENV_VARS_FILE}")
-fi
-
-if [[ -n "${DATABASE_URL_SECRET:-}" ]]; then
-  cmd+=(--set-secrets "DATABASE_URL=${DATABASE_URL_SECRET}:${DATABASE_URL_SECRET_VERSION}")
-elif [[ -n "${DATABASE_URL:-}" ]]; then
-  cmd+=(--set-env-vars "DATABASE_URL=${DATABASE_URL}")
-else
-  cmd+=(--remove-secrets "DATABASE_URL")
-fi
+cmd+=(--env-vars-file "${ENV_VARS_FILE}")
 
 if [[ "${ATTACH_CLOUD_SQL}" =~ ^(1|true|TRUE|yes|YES|on|ON)$ ]]; then
   : "${CLOUD_SQL_INSTANCE:?Set CLOUD_SQL_INSTANCE when ATTACH_CLOUD_SQL=true.}"

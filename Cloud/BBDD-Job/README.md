@@ -77,9 +77,9 @@ Ese archivo crea de forma aditiva `database_discovery_runs`,
 persiste una lista blanca de metadata: nunca guarda `connection_uri`,
 `profile.source_uri`, `evidence_summary` ni valores muestreados.
 
-`BBDD_RESULTS_DATABASE_URL` es obligatorio y apunta a esta Cloud SQL. Es un
-secreto distinto de la credencial de la BBDD objetivo. `GCS_OUTPUT_URI` tambien
-es obligatorio: si falla GCS o Cloud SQL, el Job termina con error; la fila
+`BBDD_RESULTS_DATABASE_URL` es obligatorio y apunta a esta Cloud SQL. Se entrega
+como variable plana mediante un YAML local ignorado, separada de la credencial
+de la BBDD objetivo. `GCS_OUTPUT_URI` tambien es obligatorio: si falla GCS o Cloud SQL, el Job termina con error; la fila
 `completed` solo existe despues de ambas escrituras.
 
 ## Prueba local sin Docker
@@ -133,38 +133,17 @@ Cloud/BBDD-Job/scripts/build.sh
 
 El script imprime `IMAGE_URI`; usalo en el despliegue.
 
-Para probar PII Discovery con zero-shot en Cloud Run, la imagen debe traer el
-modelo cacheado. El runtime carga el modelo con `local_files_only=True`, por lo
-que no basta con poner `disable_zero_shot=false` si el modelo no fue incluido al
-construir la imagen.
-
-Build local con modelo zero-shot incluido:
+Para probar PII Discovery con Zero-Shot en Cloud Run, configura el snapshot
+compartido en GCS. El job lo descarga a almacenamiento temporal antes de llamar
+a `Table_Extract`; pesos y tokenizer no se incluyen en la imagen:
 
 ```bash
-export IMAGE_TAG="amd64-zero-shot-$(date +%Y%m%d-%H%M%S)"
-export IMAGE_URI="us-central1-docker.pkg.dev/ldd-dev/pii/bbdd-pii-job:${IMAGE_TAG}"
-
-docker buildx build \
-  --platform linux/amd64 \
-  -f Cloud/BBDD-Job/Dockerfile \
-  --build-arg PRELOAD_ZERO_SHOT_MODEL=true \
-  --build-arg ZERO_SHOT_MODEL_NAME="MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7" \
-  -t "${IMAGE_URI}" \
-  --push \
-  --progress=plain \
-  .
+export TABLE_EXTRACT_ZERO_SHOT_MODEL_URI="gs://pii-pipeline/Models/zero-shot/mdeberta-xnli/v1"
+export TABLE_EXTRACT_ZERO_SHOT_LOCAL_DIR="/tmp/pii-models/zero-shot"
 ```
 
-Luego actualiza el Job para usar esa imagen:
-
-```bash
-gcloud run jobs update "${JOB_NAME}" \
-  --project "${PROJECT_ID}" \
-  --region "${REGION}" \
-  --image "${IMAGE_URI}"
-```
-
-En el `SCAN_REQUEST_JSON`, deja:
+La service account necesita `roles/storage.objectViewer` sobre ese snapshot. En
+el `SCAN_REQUEST_JSON`, deja:
 
 ```json
 "profile_only": false,
@@ -182,7 +161,7 @@ source Cloud/BBDD-Job/config/deploy.env.sample.sh
 export PROJECT_ID="tu-proyecto-gcp"
 export REGION="us-central1"
 export IMAGE_URI="us-central1-docker.pkg.dev/tu-proyecto-gcp/pii/bbdd-pii-job:TAG"
-export BBDD_RESULTS_DATABASE_URL_SECRET="bbdd-results-database-url"
+export ENV_VARS_FILE="Cloud/BBDD-Job/config/env.deploy.local.yaml"
 export ATTACH_CLOUD_SQL="true"
 export CLOUD_SQL_INSTANCE="tu-proyecto-gcp:us-central1:pii-results"
 
@@ -242,11 +221,11 @@ export SCAN_REQUEST_JSON_COMPACT="$(printf '%s' "${SCAN_REQUEST_JSON}" | python3
 Cloud/BBDD-Job/scripts/execute_job.sh
 ```
 
-El secreto de resultados es obligatorio en el deploy. La credencial objetivo se
-mantiene por ejecucion y no se instala como secreto fijo del Job:
+La URL de resultados es obligatoria en el YAML local de deploy. La credencial
+objetivo se mantiene por ejecución dentro de `SCAN_REQUEST_JSON`:
 
 ```bash
-export BBDD_RESULTS_DATABASE_URL_SECRET="bbdd-results-database-url"
+export ENV_VARS_FILE="Cloud/BBDD-Job/config/env.deploy.local.yaml"
 Cloud/BBDD-Job/scripts/deploy_job.sh
 ```
 
@@ -288,16 +267,18 @@ scripts lo ignoran.
 La service account del job necesita:
 
 - `roles/storage.objectCreator` sobre el bucket de `GCS_OUTPUT_URI`.
+- `roles/storage.objectViewer` sobre el snapshot de
+  `TABLE_EXTRACT_ZERO_SHOT_MODEL_URI`.
 - Permisos de red/firewall/allowlist para llegar a la BBDD externa.
 - `roles/cloudsql.client` para la Cloud SQL de resultados cuando se usa socket.
 - Permisos de Artifact Registry para leer la imagen al ejecutar el job.
-- `roles/secretmanager.secretAccessor` sobre `BBDD_RESULTS_DATABASE_URL_SECRET`.
 
 ## Notas operativas
 
 - Mantener `TASKS=1` por defecto. Sin sharding, mas tasks repetirian el mismo scan.
 - `profile_only` debe ser `false`; para pruebas baratas, usar
   `BBDD_DISABLE_ZERO_SHOT=true`.
-- Para usar zero-shot en Cloud Run, construir una imagen con
-  `PRELOAD_ZERO_SHOT_MODEL=true`; la imagen base liviana no trae el modelo.
+- Para usar Zero-Shot, configurar `TABLE_EXTRACT_ZERO_SHOT_MODEL_URI` con el
+  prefijo exacto que contiene `config.json`, `tokenizer.json`, `spm.model` y los
+  pesos en su raíz.
 - El artifact y Cloud SQL no persisten valores crudos de columnas.

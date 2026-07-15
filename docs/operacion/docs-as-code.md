@@ -1,18 +1,5 @@
 # Docs as code
 
-Sí, docs as code es una buena elección para este proyecto. La documentación
-describe contratos, tablas, variables y modelos que cambian junto al código;
-mantenerla en el mismo repositorio permite revisarla, versionarla y validarla en
-el mismo PR.
-
-## Implementación elegida
-
-- Markdown bajo `docs/`.
-- Navegación y tema en `mkdocs.yml`.
-- Dependencias fijadas en `requirements-docs.txt`.
-- Modelos en un manifiesto legible por máquinas:
-  `docs/assets/model-manifest.yaml`.
-- Build estricto en `.github/workflows/docs.yml`.
 
 ## Uso local
 

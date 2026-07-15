@@ -11,14 +11,18 @@ PARALLELISM="${PARALLELISM:-1}"
 MAX_RETRIES="${MAX_RETRIES:-0}"
 TASK_TIMEOUT="${TASK_TIMEOUT:-3600s}"
 CPU="${CPU:-2}"
-MEMORY="${MEMORY:-4Gi}"
-BBDD_RESULTS_DATABASE_URL_SECRET_VERSION="${BBDD_RESULTS_DATABASE_URL_SECRET_VERSION:-latest}"
+MEMORY="${MEMORY:-8Gi}"
 ENV_VARS_FILE="${ENV_VARS_FILE:-${PROJECT_ROOT}/Cloud/BBDD-Job/config/env.sample.yaml}"
 ATTACH_CLOUD_SQL="${ATTACH_CLOUD_SQL:-false}"
 CLEAR_CLOUD_SQL_INSTANCES="${CLEAR_CLOUD_SQL_INSTANCES:-true}"
 
 : "${IMAGE_URI:?Set IMAGE_URI with the Artifact Registry image to deploy.}"
-: "${BBDD_RESULTS_DATABASE_URL_SECRET:?Set the results Cloud SQL Secret Manager name.}"
+: "${ENV_VARS_FILE:?Set ENV_VARS_FILE with the plain runtime variables YAML.}"
+
+if [[ ! -f "${ENV_VARS_FILE}" ]]; then
+  echo "ENV_VARS_FILE does not exist: ${ENV_VARS_FILE}" >&2
+  exit 2
+fi
 
 cmd=(
   gcloud run jobs deploy "${JOB_NAME}"
@@ -41,14 +45,7 @@ if [[ -n "${SERVICE_ACCOUNT:-}" ]]; then
   cmd+=(--service-account "${SERVICE_ACCOUNT}")
 fi
 
-if [[ -f "${ENV_VARS_FILE}" ]]; then
-  cmd+=(--env-vars-file "${ENV_VARS_FILE}")
-fi
-
-cmd+=(
-  --set-secrets
-  "BBDD_RESULTS_DATABASE_URL=${BBDD_RESULTS_DATABASE_URL_SECRET}:${BBDD_RESULTS_DATABASE_URL_SECRET_VERSION}"
-)
+cmd+=(--env-vars-file "${ENV_VARS_FILE}")
 
 if [[ "${ATTACH_CLOUD_SQL}" =~ ^(1|true|TRUE|yes|YES|on|ON)$ ]]; then
   : "${CLOUD_SQL_INSTANCE:?Set CLOUD_SQL_INSTANCE when ATTACH_CLOUD_SQL=true.}"

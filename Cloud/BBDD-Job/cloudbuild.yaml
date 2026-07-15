@@ -6,14 +6,8 @@ steps:
       - Cloud/BBDD-Job/Dockerfile
       - -t
       - ${_IMAGE_URI}
-      - --build-arg
-      - PRELOAD_ZERO_SHOT_MODEL=${_PRELOAD_ZERO_SHOT_MODEL}
-      - --build-arg
-      - ZERO_SHOT_MODEL_NAME=${_ZERO_SHOT_MODEL_NAME}
       - .
 images:
   - ${_IMAGE_URI}
 substitutions:
   _IMAGE_URI: us-central1-docker.pkg.dev/PROJECT_ID/pii/bbdd-pii-job:latest
-  _PRELOAD_ZERO_SHOT_MODEL: "false"
-  _ZERO_SHOT_MODEL_NAME: MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7

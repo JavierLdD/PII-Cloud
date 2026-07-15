@@ -4,7 +4,7 @@ Nombre por defecto: `text-docs-extract-job`.
 
 ## Objetivo
 
-Materializar documentos de texto desde Drive, normalizar su contenido y crear
+Materializar documentos de texto desde fuentes externas, normalizar su contenido y crear
 chunks para el job de entidades. Comparte con PDF el contrato de persistencia,
 outbox, leases y consumo acotado de Pub/Sub.
 

@@ -13,18 +13,14 @@ TASK_TIMEOUT="${TASK_TIMEOUT:-3600s}"
 CPU="${CPU:-1}"
 MEMORY="${MEMORY:-1Gi}"
 ENV_VARS_FILE="${ENV_VARS_FILE:-${PROJECT_ROOT}/Cloud/File-Discovery-Router-Job/config/env.sample.yaml}"
-DATABASE_URL_SECRET_VERSION="${DATABASE_URL_SECRET_VERSION:-latest}"
 ATTACH_CLOUD_SQL="${ATTACH_CLOUD_SQL:-false}"
 CLEAR_CLOUD_SQL_INSTANCES="${CLEAR_CLOUD_SQL_INSTANCES:-true}"
 
 : "${IMAGE_URI:?Set IMAGE_URI with the Artifact Registry image to deploy.}"
+: "${ENV_VARS_FILE:?Set ENV_VARS_FILE with the plain runtime variables YAML.}"
 
-if [[ -n "${DATABASE_URL_SECRET:-}" && -n "${DATABASE_URL:-}" ]]; then
-  cat >&2 <<EOF
-Set only one database configuration method:
-  - DATABASE_URL_SECRET for Secret Manager, or
-  - DATABASE_URL inside ENV_VARS_FILE for a plain environment variable.
-EOF
+if [[ ! -f "${ENV_VARS_FILE}" ]]; then
+  echo "ENV_VARS_FILE does not exist: ${ENV_VARS_FILE}" >&2
   exit 2
 fi
 
@@ -38,7 +34,6 @@ For plain-env deploys, put DATABASE_URL inside:
 
 Then run:
   unset DATABASE_URL
-  unset DATABASE_URL_SECRET
 EOF
   exit 2
 fi
@@ -64,15 +59,7 @@ if [[ -n "${SERVICE_ACCOUNT:-}" ]]; then
   cmd+=(--service-account "${SERVICE_ACCOUNT}")
 fi
 
-if [[ -f "${ENV_VARS_FILE}" ]]; then
-  cmd+=(--env-vars-file "${ENV_VARS_FILE}")
-fi
-
-if [[ -n "${DATABASE_URL_SECRET:-}" ]]; then
-  cmd+=(--set-secrets "DATABASE_URL=${DATABASE_URL_SECRET}:${DATABASE_URL_SECRET_VERSION}")
-else
-  cmd+=(--remove-secrets "DATABASE_URL")
-fi
+cmd+=(--env-vars-file "${ENV_VARS_FILE}")
 
 if [[ "${ATTACH_CLOUD_SQL}" =~ ^(1|true|TRUE|yes|YES|on|ON)$ ]]; then
   : "${CLOUD_SQL_INSTANCE:?Set CLOUD_SQL_INSTANCE when ATTACH_CLOUD_SQL=true.}"

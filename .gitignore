@@ -19,6 +19,8 @@ htmlcov/
 .env
 .env.*
 !.env.example
+# Configuracion efectiva de despliegue (usar env.sample.yaml en Git)
+Cloud/**/config/env.deploy.yaml
 Cloud/BBDD/config/env.local.yaml
 Cloud/BBDD/config/*.local.yaml
 Cloud/BBDD-Job/config/*.local.sh
@@ -37,8 +39,22 @@ Cloud/Database/vars.yamnl
 *.token
 *token*.json
 *secret*.json
+*credential*.json
+*credentials*.json
+*service-account*.json
+*service_account*.json
+application_default_credentials.json
+client_secret_*.json
 google_client_secret*.json
 google_drive_token*.json
+.gcloud/
+
+# Infraestructura local; puede contener secretos y estado remoto
+*.tfvars
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars.json
 
 # Jupyter / notebooks de exploracion
 Experimentos/

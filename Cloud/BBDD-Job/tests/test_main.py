@@ -29,9 +29,29 @@ def _request(**overrides) -> ScanRequest:
         "confirm_full_scan": True,
         "output_uri": "gs://pii-results/database/",
         "output_local_path": "/tmp/bbdd-result.json",
+        "disable_zero_shot": True,
     }
     payload.update(overrides)
     return ScanRequest.from_mapping(payload)
+
+
+class FakeDownloadBlob:
+    def __init__(self, name: str, content: str) -> None:
+        self.name = name
+        self.content = content
+
+    def download_to_filename(self, destination: str) -> None:
+        Path(destination).write_text(self.content, encoding="utf-8")
+
+
+class FakeStorageClient:
+    def __init__(self, blobs: list[FakeDownloadBlob]) -> None:
+        self.blobs = blobs
+        self.calls: list[tuple[str, str]] = []
+
+    def list_blobs(self, bucket_name: str, *, prefix: str):
+        self.calls.append((bucket_name, prefix))
+        return [blob for blob in self.blobs if blob.name.startswith(prefix)]
 
 
 def _artifact() -> dict[str, object]:
@@ -113,6 +133,52 @@ def test_main_propagates_results_database_failure(monkeypatch) -> None:
 
     with pytest.raises(RuntimeError, match="results database unavailable"):
         job_main.main()
+
+
+def test_prepare_zero_shot_model_downloads_snapshot_and_uses_local_path(tmp_path) -> None:
+    storage = FakeStorageClient(
+        [
+            FakeDownloadBlob("models/zero/config.json", "{}"),
+            FakeDownloadBlob("models/zero/tokenizer.json", "{}"),
+            FakeDownloadBlob("models/zero/spm.model", "sentencepiece"),
+            FakeDownloadBlob("models/zero/onnx/model.onnx", "onnx"),
+        ]
+    )
+    local_dir = tmp_path / "zero-shot"
+
+    prepared = job_main.prepare_zero_shot_model(
+        _request(disable_zero_shot=False),
+        env={
+            "TABLE_EXTRACT_ZERO_SHOT_MODEL_URI": "gs://pii-models/models/zero",
+            "TABLE_EXTRACT_ZERO_SHOT_LOCAL_DIR": str(local_dir),
+        },
+        storage_client=storage,
+    )
+
+    assert prepared.zero_shot_model_name == str(local_dir)
+    assert storage.calls == [("pii-models", "models/zero/")]
+    assert (local_dir / "tokenizer.json").exists()
+    assert (local_dir / "spm.model").exists()
+    assert (local_dir / "onnx" / "model.onnx").exists()
+
+
+def test_prepare_zero_shot_model_requires_gcs_uri_when_enabled() -> None:
+    with pytest.raises(RuntimeError, match="TABLE_EXTRACT_ZERO_SHOT_MODEL_URI"):
+        job_main.prepare_zero_shot_model(
+            _request(disable_zero_shot=False),
+            env={},
+            storage_client=FakeStorageClient([]),
+        )
+
+
+def test_prepare_zero_shot_model_skips_gcs_when_disabled() -> None:
+    request = _request(disable_zero_shot=True)
+
+    assert job_main.prepare_zero_shot_model(
+        request,
+        env={},
+        storage_client=FakeStorageClient([]),
+    ) is request
 
 
 class FakeRepository:

@@ -61,14 +61,12 @@ en GCS y Cloud SQL.
 ## Zero-Shot
 
 El modelo esperado es
-`MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7`. La imagen base no
-lo precarga y el runtime usa `local_files_only=True`. El código deja la feature
-habilitada por defecto, pero la plantilla de despliegue define
-`BBDD_DISABLE_ZERO_SHOT=true`. Para usarla de forma real hay que construir con
-`PRELOAD_ZERO_SHOT_MODEL=true` o proporcionar un artefacto local compatible, y
-dejar `disable_zero_shot=false`. Sin los pesos, el error aparece de forma lazy
-cuando una columna candidata intenta cargar el modelo, no necesariamente al
-arrancar el job.
+`MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7`. Los pesos y archivos
+del tokenizer viven en GCS. Cuando `disable_zero_shot=false`, el wrapper copia
+`TABLE_EXTRACT_ZERO_SHOT_MODEL_URI` a
+`TABLE_EXTRACT_ZERO_SHOT_LOCAL_DIR` y pasa esa ruta local a `Table_Extract`, que
+carga con `local_files_only=True`. La imagen conserva las dependencias de
+runtime, incluido `sentencepiece`, pero no incluye el snapshot del modelo.
 
 ## Idempotencia y restricciones
 
@@ -84,7 +82,8 @@ ser `false`.
 ## Variables esenciales
 
 `SCAN_REQUEST_JSON`, `BBDD_RESULTS_DATABASE_URL`, `GCS_OUTPUT_URI`,
-`BBDD_DISABLE_ZERO_SHOT`, `TABLE_EXTRACT_ZERO_SHOT_MODEL`,
+`BBDD_DISABLE_ZERO_SHOT`, `TABLE_EXTRACT_ZERO_SHOT_MODEL_URI`,
+`TABLE_EXTRACT_ZERO_SHOT_LOCAL_DIR`,
 `TABLE_EXTRACT_ZERO_SHOT_DEVICE`, `TABLE_EXTRACT_ZERO_SHOT_BATCH_SIZE` y
 `LOG_LEVEL`.
 

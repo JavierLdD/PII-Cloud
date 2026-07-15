@@ -77,7 +77,7 @@ def test_database_result_tables_do_not_have_secret_or_raw_value_columns() -> Non
     assert "raw_values" not in section
 
 
-def test_deploy_uses_separate_results_database_secret() -> None:
+def test_deploy_uses_plain_results_database_environment() -> None:
     deploy_script = (JOB_DIR / "scripts" / "deploy_job.sh").read_text(
         encoding="utf-8"
     )
@@ -88,8 +88,24 @@ def test_deploy_uses_separate_results_database_secret() -> None:
         encoding="utf-8"
     )
 
-    assert "BBDD_RESULTS_DATABASE_URL_SECRET" in deploy_script
-    assert "BBDD_RESULTS_DATABASE_URL=" in deploy_script
-    assert "BBDD_RESULTS_DATABASE_URL_SECRET" in cloud_deploy_script
+    assert "--env-vars-file" in deploy_script
+    assert "BBDD_RESULTS_DATABASE_URL" in cloud_deploy_script
+    assert "secretKeyRef" not in cloud_deploy_script
+    assert "--set-secrets" not in deploy_script
     assert "GCS_OUTPUT_URI" in cloud_deploy_script
-    assert "BBDD_RESULTS_DATABASE_URL:" not in env_sample
+    assert "BBDD_RESULTS_DATABASE_URL:" in env_sample
+
+
+def test_cloud_runtime_downloads_zero_shot_and_keeps_tokenizer_dependency() -> None:
+    dockerfile = (JOB_DIR / "Dockerfile").read_text(encoding="utf-8")
+    cloudbuild = (JOB_DIR / "cloudbuild.yaml").read_text(encoding="utf-8")
+    requirements = (JOB_DIR / "requirements-cloud.txt").read_text(encoding="utf-8")
+    env_sample = (JOB_DIR / "config" / "env.sample.yaml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "sentencepiece>=0.2,<0.3" in requirements
+    assert "TABLE_EXTRACT_ZERO_SHOT_MODEL_URI" in env_sample
+    assert "TABLE_EXTRACT_ZERO_SHOT_LOCAL_DIR" in env_sample
+    assert "PRELOAD_ZERO_SHOT_MODEL" not in dockerfile
+    assert "PRELOAD_ZERO_SHOT_MODEL" not in cloudbuild

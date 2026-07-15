@@ -1,5 +1,5 @@
 # Example values only. Keep real database credentials in an ignored local file
-# or inject them through Secret Manager at deployment time.
+# Keep real values only in an ignored *.local.yaml deployment file.
 DISCOVERY_ROUTER_REQUEST_JSON: ""
 
 TOPIC_PDF: ""
