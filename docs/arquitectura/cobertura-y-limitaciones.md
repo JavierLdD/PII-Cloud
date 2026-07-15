@@ -32,13 +32,6 @@ realmente desplegables.
   y expiración de un día por defecto; no crea suscripciones ni consumidores de
   Tables o Unsupported.
 
-## Limitaciones de trazabilidad de modelos
-
-Los nombres de modelo están definidos, pero sus revisiones no están fijadas por
-hash en todos los casos. Además, el Zero-Shot de Entity se copia desde GCS: Git
-no puede probar que el contenido del bucket coincide con el identificador
-documentado. Consulte [Modelos y licencias](../ml/modelos-y-licencias.md).
-
 ## Criterio para declarar una capacidad lista
 
 Una ruta sólo debe marcarse como operativa cuando existan y se hayan validado:

@@ -47,7 +47,7 @@ flowchart LR
 | `es_core_news_lg` | NER español dentro de spaCy/Presidio |
 | `fastino/gliner2-privacy-filter-PII-multi` | NER flexible orientado a PII |
 | `HUMADEX/spanish_medical_ner` | Entidades médicas en español |
-| Artefacto GCS esperado: `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` | Clasificación Zero-Shot; la identidad de los bytes desplegados debe verificarse en el bucket |
+| Artefacto GCS esperado: `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` | Clasificación Zero-Shot|
 
 Además hay regex y listas deterministas; no toda entidad proviene de ML. Las
 licencias y riesgos de reproducibilidad se detallan en

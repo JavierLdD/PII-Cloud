@@ -1,7 +1,6 @@
 # Flujo por tipo de archivo
 
-El Router decide la ruta usando MIME type, extensión y tipo nativo de Google
-Drive. La tabla refleja el comportamiento actual, no una arquitectura futura.
+El Router decide la ruta usando MIME type, extensión y tipo nativo en la fuente de datos. La tabla refleja el comportamiento actual, no una arquitectura futura.
 
 | Entrada | Topic | Consumidor actual | Resultado |
 |---|---|---|---|

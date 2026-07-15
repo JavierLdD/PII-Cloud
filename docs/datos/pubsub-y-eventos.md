@@ -38,8 +38,8 @@ PDF, Docs, OCR, Entity y poison; no crea Tables ni Unsupported.
 Un evento transporta metadata y referencias, no el documento ni los chunks
 completos:
 
-- Router referencia el archivo de Drive y su fila `files`.
-- PDF/Docs materializan el binario directamente desde Drive.
+- Router referencia el archivo y su fila `files`.
+- PDF/Docs materializan el binario directamente desde la fuente externa.
 - `file.chunks_ready` referencia chunks ya persistidos en Cloud SQL.
 - Entity lee el texto desde `text_chunks_staging`.
 

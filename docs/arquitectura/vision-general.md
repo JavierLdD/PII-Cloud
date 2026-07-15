@@ -4,7 +4,7 @@
 
 La solución separa el descubrimiento, la extracción de texto y la detección de
 PII. Cloud SQL conserva el estado durable del pipeline; Pub/Sub desacopla las
-etapas; GCS almacena artefactos JSON finales. Los archivos de Drive se
+etapas; GCS almacena artefactos JSON finales. Los archivos de las fuentes externas se
 materializan de manera temporal dentro de cada job y no viajan por Pub/Sub.
 
 ```mermaid
@@ -30,8 +30,7 @@ flowchart TB
 
 ## Secuencia del pipeline de archivos
 
-1. **File Discovery + Router** enumera recursivamente una carpeta de Google
-   Drive, compara el inventario con ejecuciones anteriores y decide la ruta de
+1. **File Discovery + Router** enumera recursivamente una carpeta de la fuente externa, compara el inventario con ejecuciones anteriores y decide la ruta de
    cada archivo.
 2. **Text PDF Extract** y **Text Docs Extract** consumen sus suscripciones por
    `user_id` y `run_id`, materializan el archivo, extraen texto y escriben
