@@ -1,5 +1,8 @@
 # Cloud Run Job Text Docs Extract
 
+> Documentación canónica del flujo, persistencia y fallos:
+> [`docs/jobs/text-docs-extract.md`](../../docs/jobs/text-docs-extract.md).
+
 Job finito para drenar una subscription Pub/Sub de documentos ya ruteados,
 materializar cada archivo temporalmente, extraer texto y publicar
 `file.chunks_ready` hacia `TOPIC_PII_ENTITIES`.

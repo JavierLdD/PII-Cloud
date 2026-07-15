@@ -1,5 +1,8 @@
 # Cloud Run Job File Discovery + Router
 
+> Documentación canónica del flujo, persistencia y fallos:
+> [`docs/jobs/file-discovery-router.md`](../../docs/jobs/file-discovery-router.md).
+
 Job finito para descubrir archivos desde Google Drive, registrar metadata en
 Cloud SQL/Postgres y publicar eventos `file.routed` hacia Pub/Sub.
 
@@ -13,7 +16,7 @@ La app web o backend debe ejecutar el job con `DISCOVERY_ROUTER_REQUEST_JSON`:
 ```json
 {
   "user_id": "user-001",
-  "run_id": "run-001",
+  "run_id": "86ca6e73-ea37-4c1f-812d-7b71dcb771bb",
   "source_type": "drive",
   "drive_folder_id": "DRIVE_FOLDER_ID",
   "source_name": "carpeta-clientes",
@@ -56,7 +59,7 @@ entorno plana si `DATABASE_URL_SECRET` no esta configurada.
 
 ## Build
 
-Desde la raiz de `PII-Cloud`:
+Desde la raíz del repositorio:
 
 ```bash
 export IMAGE_URI="REGION-docker.pkg.dev/PROJECT_ID/pii/file-discovery-router-job:TAG"
@@ -103,7 +106,7 @@ Cloud/File-Discovery-Router-Job/scripts/deploy_job.sh
 ```bash
 export DISCOVERY_ROUTER_REQUEST_JSON='{
   "user_id": "user-001",
-  "run_id": "run-001",
+  "run_id": "86ca6e73-ea37-4c1f-812d-7b71dcb771bb",
   "source_type": "drive",
   "drive_folder_id": "DRIVE_FOLDER_ID"
 }'

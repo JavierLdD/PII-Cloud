@@ -13,7 +13,8 @@ Opcional:
   USER_ID    Identificador de usuario esperado por los jobs. Default: user-001
 
 Ejemplo:
-  PROJECT_ID=ldd-dev USER_ID=user-001 RUN_ID=run-001 \
+  PROJECT_ID=ldd-dev USER_ID=user-001 \
+    RUN_ID=86ca6e73-ea37-4c1f-812d-7b71dcb771bb \
     bash Cloud/Pruebas/crear_suscripciones_pubsub.sh
 
 Subscriptions creadas:

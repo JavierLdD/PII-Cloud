@@ -1,0 +1,86 @@
+schema_version: "1.0"
+verified_at: "2026-07-15"
+scope: "Modelos referenciados por el código cloud; la licencia es la declarada upstream y no constituye asesoría legal."
+
+models:
+  - model_id: es_core_news_lg
+    purpose: NER general en español a través de spaCy y Presidio
+    consumers:
+      - Entity-Text-Extract-Job
+    feature_enabled_by_default: true
+    artifact_source: "python -m spacy download es_core_news_lg durante el build"
+    model_preloaded_in_image: true
+    revision: null
+    revision_status: unpinned
+    declared_license: GPL-3.0
+    license_scope: named_upstream_model
+    license_source: https://github.com/explosion/spacy-models/releases/tag/es_core_news_lg-3.8.0
+
+  - model_id: fastino/gliner2-privacy-filter-PII-multi
+    purpose: NER multietiqueta orientado a PII
+    consumers:
+      - Entity-Text-Extract-Job
+    feature_enabled_by_default: true
+    artifact_source: Hugging Face Hub durante el build
+    model_preloaded_in_image: true
+    revision: null
+    revision_status: unpinned
+    declared_license: Apache-2.0
+    license_scope: named_upstream_model
+    license_source: https://huggingface.co/fastino/gliner2-privacy-filter-PII-multi
+
+  - model_id: HUMADEX/spanish_medical_ner
+    purpose: NER de entidades médicas en español
+    consumers:
+      - Entity-Text-Extract-Job
+    feature_enabled_by_default: true
+    artifact_source: Hugging Face Hub durante el build
+    model_preloaded_in_image: true
+    revision: null
+    revision_status: unpinned
+    declared_license: Apache-2.0
+    license_scope: named_upstream_model
+    license_source: https://huggingface.co/HUMADEX/spanish_medical_ner
+    license_note: Licencia declarada en la ficha del modelo; no se encontró un archivo LICENSE independiente en el repositorio del modelo.
+
+  - model_id: MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
+    purpose: Clasificación zero-shot de columnas tabulares ambiguas
+    consumers:
+      - BBDD-Job
+    feature_enabled_by_default: true
+    deployment_template_enabled: false
+    artifact_source: Hugging Face Hub o caché local configurada
+    model_preloaded_in_base_image: false
+    revision: null
+    revision_status: unpinned
+    declared_license: MIT
+    license_scope: named_upstream_model
+    license_source: https://huggingface.co/MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7/blob/main/LICENSE
+
+runtime_model_artifacts:
+  - artifact_id: entity-zero-shot-gcs
+    consumer: Entity-Text-Extract-Job
+    purpose: Clasificación zero-shot de candidatos ambiguos
+    expected_upstream_model_id: MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
+    feature_enabled_by_default: true
+    artifact_source: GCS mediante PII_ENTITY_ZERO_SHOT_MODEL_URI
+    identity_status: unverified_from_git
+    deployed_revision: unknown
+    deployed_license: unknown
+    expected_upstream_declared_license: MIT
+    expected_upstream_license_source: https://huggingface.co/MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7/blob/main/LICENSE
+    verification_required: Verificar identificador, revisión y SHA-256 de los bytes almacenados en GCS.
+
+external_ml_services:
+  - service_id: mineru-api
+    status: not_used_by_current_cloud_jobs
+    code_location: Text_Extract/ocr
+    purpose: OCR y parsing de documentos mediante un servicio externo
+    deployed_model_id: null
+    deployed_model_revision: null
+    deployed_model_license: unknown
+    upstream_code_license: MinerU Open Source License
+    upstream_code_license_basis: Apache-2.0 con condiciones adicionales
+    upstream_code_license_source: https://github.com/opendatalab/MinerU/blob/master/LICENSE.md
+    upstream_code_license_note: Incluye umbrales para licencia comercial separada y una obligación de atribución para servicios online a terceros; revisar el texto oficial antes de distribuir u ofrecer el servicio.
+    note: El repositorio contiene el cliente, pero ningún job cloud actual lo invoca. Registrar el manifiesto del servicio antes de habilitarlo.

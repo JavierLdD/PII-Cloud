@@ -1,7 +1,32 @@
-# PII-Cloud
+# PII-disocvery-Cloud-LdD
 
 Repositorio independiente para construir, desplegar y operar los componentes
 cloud del proyecto PII.
+
+## Documentación
+
+La documentación técnica vive en `docs/` y se construye como sitio MkDocs. Incluye
+la arquitectura real del pipeline, el procesamiento job por job, contratos de
+Pub/Sub, persistencia, operación y el inventario de modelos de ML con sus
+licencias declaradas por los proveedores.
+
+Para verla localmente:
+
+```bash
+python -m pip install -r requirements-docs.txt
+python -m mkdocs serve
+```
+
+Para ejecutar la misma validación estricta usada en CI:
+
+```bash
+python -m mkdocs build --strict
+```
+
+El punto de entrada es [`docs/index.md`](docs/index.md). Los cambios de
+comportamiento del pipeline deben actualizar la documentación y, cuando
+corresponda, el
+[`model-manifest.yaml`](docs/assets/model-manifest.yaml) en el mismo PR.
 
 ## Independencia del repositorio principal
 
@@ -23,6 +48,7 @@ copia vecina de `Proyecto`.
 ## Estructura
 
 - `Cloud/`: jobs, infraestructura SQL y utilidades operacionales.
+- `docs/`: documentación canónica de arquitectura, jobs, datos, ML y operación.
 - `Text_Extract/`: copia cloud del extractor de texto.
 - `Entity_Text_Extract/`: copia cloud del extractor de entidades.
 - `Entity_Text_Filter/`: copia cloud del filtro de entidades.

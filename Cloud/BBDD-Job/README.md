@@ -1,7 +1,10 @@
 # Cloud Run Job para PII en BBDD
 
+> Documentación canónica del flujo, persistencia y fallos:
+> [`docs/jobs/bbdd.md`](../../docs/jobs/bbdd.md).
+
 Boilerplate para desplegar en Cloud Run Jobs el flujo tabular/BBDD basado en
-`Table_Extract`, incluido en la raiz de `PII-Cloud`. El job recibe un
+`Table_Extract`, incluido en la raíz del repositorio. El job recibe un
 `ScanRequest`, conecta a una fuente BBDD y ejecuta PII Discovery. Una ejecucion
 exitosa publica primero el artifact
 JSON en Cloud Storage y despues persiste su proyeccion consultable en Cloud SQL,
@@ -82,7 +85,7 @@ es obligatorio: si falla GCS o Cloud SQL, el Job termina con error; la fila
 ## Prueba local sin Docker
 
 Una ejecucion completa local tambien debe tener destinos reales de prueba para
-GCS y PostgreSQL. Desde la raiz de `PII-Cloud`:
+GCS y PostgreSQL. Desde la raíz del repositorio:
 
 ```bash
 export SCAN_REQUEST_JSON='{"run_id":"86ca6e73-ea37-4c1f-812d-7b71dcb771bb","user_id":"ana","run_name":"Clientes local","database_type":"postgresql","connection_uri":"postgresql+psycopg://usuario:password@localhost:5432/db","confirm_full_scan":true}'
@@ -113,7 +116,7 @@ docker run --rm \
 
 ## Build
 
-Desde la raiz de `PII-Cloud`:
+Desde la raíz del repositorio:
 
 ```bash
 source Cloud/BBDD-Job/config/deploy.env.sample.sh
@@ -192,7 +195,7 @@ Cloud Deploy sirve para versionar el despliegue del Job como un release. No
 ejecuta el Job automaticamente; despues del release se invoca con
 `gcloud run jobs execute`.
 
-Desde la raiz de `PII-Cloud`:
+Desde la raíz del repositorio:
 
 ```bash
 source Cloud/BBDD-Job/config/deploy.env.sample.sh

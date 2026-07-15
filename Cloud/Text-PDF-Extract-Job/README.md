@@ -1,5 +1,8 @@
 # Cloud Run Job Text PDF Extract
 
+> Documentación canónica del flujo, persistencia y fallos:
+> [`docs/jobs/text-pdf-extract.md`](../../docs/jobs/text-pdf-extract.md).
+
 Job finito para drenar una subscription Pub/Sub de PDFs ya ruteados, materializar
 cada archivo temporalmente, extraer texto con PyMuPDF y publicar
 `file.chunks_ready` hacia `TOPIC_PII_ENTITIES`.

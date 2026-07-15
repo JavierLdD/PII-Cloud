@@ -1,6 +1,9 @@
 # Build de documentacion
 /site/
 
+# Checkout Git independiente anidado; nunca agregarlo como gitlink del repo cloud.
+/PII-disocvery-Cloud-LdD/
+
 # Python
 __pycache__/
 *.py[cod]

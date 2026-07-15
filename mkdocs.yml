@@ -1,0 +1,79 @@
+site_name: PII-disocvery-Cloud-LdD
+site_description: Arquitectura, procesamiento y operación del pipeline cloud de descubrimiento de PII
+site_author: LdD
+
+theme:
+  name: material
+  language: es
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Usar tema oscuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Usar tema claro
+
+plugins:
+  - search:
+      lang: es
+
+nav:
+  - Inicio: index.md
+  - Arquitectura:
+      - Visión general: arquitectura/vision-general.md
+      - Flujo por tipo de archivo: arquitectura/flujo-por-tipo-de-archivo.md
+      - Cobertura y limitaciones: arquitectura/cobertura-y-limitaciones.md
+  - Jobs:
+      - File Discovery + Router: jobs/file-discovery-router.md
+      - Text PDF Extract: jobs/text-pdf-extract.md
+      - Text Docs Extract: jobs/text-docs-extract.md
+      - Entity Text Extract: jobs/entity-text-extract.md
+      - BBDD: jobs/bbdd.md
+  - Datos y eventos:
+      - Pub/Sub y contratos: datos/pubsub-y-eventos.md
+      - Cloud SQL y GCS: datos/cloud-sql-y-gcs.md
+  - Machine Learning:
+      - Modelos y licencias: ml/modelos-y-licencias.md
+  - Operación:
+      - Build, deploy y ejecución: operacion/build-deploy-ejecucion.md
+      - Docs as code: operacion/docs-as-code.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+
+copyright: Documentación técnica de PII-disocvery-Cloud-LdD
