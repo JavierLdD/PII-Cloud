@@ -2,10 +2,9 @@
 
 ## Documentación
 
-La documentación técnica vive en `docs/` y se construye como sitio MkDocs. Incluye
-la arquitectura real del pipeline, el procesamiento job por job, contratos de
-Pub/Sub, persistencia, operación y el inventario de modelos de ML con sus
-licencias declaradas por los proveedores.
+La documentación técnica vive en `docs/`. Incluye
+la arquitectura del pipeline, el procesamiento job por job, contratos de
+Pub/Sub, persistencia, operación y el inventario de modelos de ML.
 
 Para verla localmente:
 
