@@ -38,6 +38,8 @@ flowchart LR
   camino sigue cada formato.
 - [Modelos y licencias](ml/modelos-y-licencias.md): modelos activos, modelos
   opcionales, versiones y obligaciones a revisar.
+- [Confianza y filtrado](ml/confianza-y-filtrado.md): umbrales exactos para
+  `VERY_CONFIDENT`, `CONFIDENT`, `PROBABLE` y descarte.
 - [Build, deploy y ejecución](operacion/build-deploy-ejecucion.md): orden
   operacional y puntos de verificación.
 - [Docs as code](operacion/docs-as-code.md): cómo mantener este sitio junto al

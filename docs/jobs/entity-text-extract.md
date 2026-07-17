@@ -53,6 +53,10 @@ Además hay regex y listas deterministas; no toda entidad proviene de ML. Las
 licencias y riesgos de reproducibilidad se detallan en
 [Modelos y licencias](../ml/modelos-y-licencias.md).
 
+Los niveles `VERY_CONFIDENT`, `CONFIDENT` y `PROBABLE`, sus umbrales exactos y
+los campos disponibles para filtrar resultados se explican en
+[Confianza y filtrado](../ml/confianza-y-filtrado.md).
+
 ## Persistencia y artefactos
 
 - `entity_extraction_files`: estado, tiempos y rutas de artefactos.

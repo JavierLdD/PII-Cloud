@@ -48,6 +48,7 @@ nav:
       - Pub/Sub y contratos: datos/pubsub-y-eventos.md
       - Cloud SQL y GCS: datos/cloud-sql-y-gcs.md
   - Machine Learning:
+      - Confianza y filtrado: ml/confianza-y-filtrado.md
       - Modelos y licencias: ml/modelos-y-licencias.md
   - Operación:
       - Build, deploy y ejecución: operacion/build-deploy-ejecucion.md

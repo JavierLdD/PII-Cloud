@@ -28,6 +28,7 @@ páginas omitidas de la navegación.
 | Cambio de schema SQL | Job afectado y Cloud SQL/GCS |
 | Nuevo formato soportado | Router, flujo por tipo y job consumidor |
 | Modelo o revisión nueva | Página ML y `docs/assets/model-manifest.yaml` |
+| Umbral o política de confianza | Confianza y filtrado, Entity y tests del resolver |
 | Cambio de licencia upstream | Página ML, manifiesto y fecha de verificación |
 | Nueva variable operativa | Job y build/deploy/ejecución |
 
